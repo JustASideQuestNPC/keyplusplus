@@ -1,6 +1,27 @@
 /*
-* Key++ By NPC
-*/
+ *       __ __              __     __
+ *      / //_/___  __ __ __/ /_ __/ /_
+ *     / ,<  / -_)/ // //_  __//_  __/
+ *    /_/|_| \__/ \_, /  /_/    /_/
+ *               /___/
+ *
+ *    version 1.1.0
+ *    https://github.com/JustASideQuestNPC/keyplusplus
+ *
+ *    Copyright (C) 2023 Joseph Williams
+ *
+ *    This software may be modified and distributed under the terms of
+ *    the MIT license. See the LICENSE file for details.
+ *
+ *    THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ *    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ *    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ *    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ *    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ *    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ *    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 
 // globals
 JSONObject inputCodes;
@@ -126,7 +147,7 @@ public class InputHandler {
   // constructor
   InputHandler() {
     binds = new HashMap<String, InputBind>();
-    inputCodes = loadJSONObject("./inputCodes.json");
+    inputCodes = loadJSONObject("./kppInputCodes.json");
   }
 
   // methods to add each type of input. adders also return a reference to the input in case you want to store it somewhere
