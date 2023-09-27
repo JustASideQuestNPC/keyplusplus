@@ -22,122 +22,101 @@
  *    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-
 // globals
 JSONObject inputCodes;
 HashMap<Integer, Boolean> keyStates = new HashMap<Integer, Boolean>();
-PVector mousePos = new PVector(0, 0); // position of the mouse on the current frame
-PVector pmousePos = new PVector(0, 0); // position of the mouse on the previous frame
+PVector mousePos = new PVector(0, 0);   // position of the mouse on the current frame
+PVector pmousePos = new PVector(0, 0);  // position of the mouse on the previous frame
 PVector mouseDelta = new PVector(0, 0); // how much the mouse has moved since the previous frame
 
-// superclass for input binds - you shouldn't ever need to create this on its own
-public abstract class InputBind {
-  private int[] boundKeys; // all keys/buttons that trigger this action
-  protected boolean isActive; // whether the input is active (pressed) or not
+// "enums"
+static final int CONTINUOUS = 0;
+static final int PRESS_ONLY = 1;
+static final int RELEASE_ONLY = 2;
 
-  // constructor
-  InputBind(String[] keyStrings) {
-    // initalize boundKeys to the correct length
+// a single input binding
+public class InputBind {
+  private int[] boundKeys;    // all keys that can trigger this input
+  private boolean isActive;      // whether the input is active ("pressed")
+  private int activationMode; // the input's activation mode - CONTINUOUS, PRESS_ONLY, or RELEASE_ONLY
+  private boolean wasActive;    // used for press-only and release-only inputs
+
+  // four constructors because Proccessing is too cool for default parameters (but not too cool for overloading, thankfully)
+  InputBind(String[] keyStrings, int mode) {
+    // set activation mode
+    activationMode = mode;
+
+    // make the boundKeys array the same size as the keyStrings array
     boundKeys = new int[keyStrings.length];
 
-    // iterate through keyStrings and convert each string to the correct keyCode int
+    // loop through the key strings and convert each string to the correct key code (using the data in the json file)
     for (int i = 0; i < keyStrings.length; ++i) {
-      boundKeys[i] = inputCodes.getInt(keyStrings[i].toLowerCase());
+      boundKeys[i] = inputCodes.getInt(keyStrings[i]);
+    }
+
+    // wasActive needs to based on activation mode to prevent a few errors
+    if (activationMode == PRESS_ONLY) {
+      wasActive = false;
+    }
+    else {
+      wasActive = true;
     }
   }
-  // alternate constructor that uses a single key
-  InputBind(String keyString) {
-    boundKeys = new int[1];
-    boundKeys[0] = inputCodes.getInt(keyString.toLowerCase());
-  }
 
-  // checks if at least one of the keys bound to the bind is pressed
-  protected boolean boundKeyPressed() {
-    for (int i : boundKeys) {
-      if (keyStates.getOrDefault(i, false)) return true;
+  // checks key states and updates whether the input is active or not
+  void update() {
+    // find whether at least one bound key is pressed
+    boolean boundKeyPressed = false;
+    for (int k : boundKeys) {
+      // uses getOrDefault because any key that hasn't been pressed yet won't have an entry in the map yey
+      if (keyStates.getOrDefault(k, false)) {
+        boundKeyPressed = true;
+        break; // break ends the loop early (since checking the rest of the keys is pointless once the first pressed key is found)
+      }
     }
-    return false;
+
+    // update whether the input is active based on its activation mode - switch statements work the same as chaining
+    // multiple if/else if statements, but they're significantly faster (and more readable imo)
+    switch (activationMode) {
+      case CONTINUOUS:
+        // continuous inputs are active whenever a bound key is pressed
+        isActive = boundKeyPressed;
+        break;
+      case PRESS_ONLY:
+        // press-only inputs are active on the first frame that at least one bound key is pressed
+        if (boundKeyPressed) {
+          if (wasActive) {
+            isActive = false;
+          }
+          else {
+            isActive = true;
+            wasActive = true;
+          }
+        }
+        else {
+          wasActive = false;
+        }
+        break;
+      case RELEASE_ONLY:
+        // release-only inputs are active on the first frame that at no bound keys are pressed
+        if (!boundKeyPressed) {
+          if (wasActive) {
+            isActive = false;
+          }
+          else {
+            isActive = true;
+            wasActive = true;
+          }
+        }
+        else {
+          wasActive = false;
+        }
+        break;
+    }
   }
 
-  // update is a abstract function (meaning all subclasses have a different version of it), so it doesn't need to be defined
-  abstract void update();
-
-  // gets whether the input is pressed or not
+  // returns whether the bind is active or not
   boolean active() { return isActive; }
-}
-
-// subclasses for the different input types
-public class ContinuousInput extends InputBind {
-  // java classes never inherit their superclass's constructors, so this just calls it manually
-  ContinuousInput(String[] keyStrings) { super(keyStrings); }
-  ContinuousInput(String keyString) { super(keyString); }
-  void update() {
-    this.isActive = boundKeyPressed();
-  }
-}
-
-public class PressInput extends InputBind {
-  boolean wasPressed;
-
-  PressInput(String[] keyStrings) {
-    // start by calling the superclass constructor, then set up a few PressInput-specific things
-    super(keyStrings);
-    wasPressed = false;
-  }
-  PressInput(String keyString) {
-    // start by calling the superclass constructor, then set up a few PressInput-specific things
-    super(keyString);
-    wasPressed = false;
-  }
-
-  void update() {
-    boolean isPressed = boundKeyPressed();
-
-    if (isPressed) {
-      if (wasPressed) {
-        this.isActive = false;
-      }
-      else {
-        this.isActive = true;
-        wasPressed = true;
-      }
-    }
-    else {
-      wasPressed = false;
-    }
-  }
-}
-
-public class ReleaseInput extends InputBind {
-  boolean wasReleased;
-
-  ReleaseInput(String[] keyStrings) {
-    // start by calling the superclass constructor, then set up a few ReleaseInput-specific things
-    super(keyStrings);
-    wasReleased = true;
-  }
-  ReleaseInput(String keyString) {
-    // start by calling the superclass constructor, then set up a few ReleaseInput-specific things
-    super(keyString);
-    wasReleased = true;
-  }
-
-  void update() {
-    boolean isPressed = boundKeyPressed();
-
-    if (!isPressed) {
-      if (wasReleased) {
-        this.isActive = false;
-      }
-      else {
-        this.isActive = true;
-        wasReleased = true;
-      }
-    }
-    else {
-      wasReleased = false;
-    }
-  }
 }
 
 // handles updates for as many input binds as you want - create one of these and then add all your inputs to it
@@ -150,38 +129,22 @@ public class InputHandler {
     inputCodes = loadJSONObject("./kppInputCodes.json");
   }
 
-  // methods to add each type of input. adders also return a reference to the input in case you want to store it somewhere
-  ContinuousInput addContinuous(String name, String[] keyStrings) {
-    ContinuousInput input = new ContinuousInput(keyStrings);
-    binds.put(name, input);
-    return input;
+  // adds an input bind to the handler. also returns a reference to the bind in case you want to store it
+  InputBind addInput(String name, String[] keyStrings, int mode) {
+    binds.put(name, new InputBind(keyStrings, mode));
+    return binds.get(name);
   }
-  ContinuousInput addContinuous(String name, String keyString) {
-    ContinuousInput input = new ContinuousInput(keyString);
-    binds.put(name, input);
-    return input;
+  // addInput has three alternate versions ("overloads") to allow using a single string instead of an array
+  // when an input is only bound to a single key, and to make mode a default parameter. since they don't do
+  // anything else, they just have to call the original addInput with some modifications
+  InputBind addInput(String name, String[] keyStrings) {
+    return addInput(name, keyStrings, CONTINUOUS);
   }
-
-  PressInput addPress(String name, String[] keyStrings) {
-    PressInput input = new PressInput(keyStrings);
-    binds.put(name, input);
-    return input;
+  InputBind addInput(String name, String keyString, int mode) {
+    return addInput(name, new String[]{keyString}, mode);
   }
-  PressInput addPress(String name, String keyString) {
-    PressInput input = new PressInput(keyString);
-    binds.put(name, input);
-    return input;
-  }
-
-  ReleaseInput addRelease(String name, String[] keyStrings) {
-    ReleaseInput input = new ReleaseInput(keyStrings);
-    binds.put(name, input);
-    return input;
-  }
-  ReleaseInput addRelease(String name, String keyString) {
-    ReleaseInput input = new ReleaseInput(keyString);
-    binds.put(name, input);
-    return input;
+  InputBind addInput(String name, String keyString) {
+    return addInput(name, new String[]{keyString}, CONTINUOUS);
   }
 
   // updates all bindings and mouse positios
@@ -202,8 +165,13 @@ public class InputHandler {
     return binds.get(name).active();
   }
 
-  // gets the state of a key. if the name is invalid, it returns false.
-  boolean getKey(String name) {
+  // returns a reference to a binding. names are case-insensitive, and invalid names create undefined behavior
+  InputBind getBindRef(String name) {
+    return binds.get(name);
+  }
+
+  // returns the state of a key, or false if the name is invalid
+  boolean getKeyState(String name) {
     // this defaults to false because any key that hasn't been pressed yet won't have an entry in the hashmap
     return keyStates.getOrDefault(inputCodes.getInt(name), false);
   }

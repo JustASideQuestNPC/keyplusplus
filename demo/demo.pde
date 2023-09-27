@@ -6,12 +6,9 @@ color green = color(0, 255, 0);
 
 // predefine input handler and input binds
 InputHandler inputs;
-ContinuousInput mouseBind;
-PressInput press;
-ReleaseInput release;
+InputBind mouseBind, press, release;
 
 // preset key codes for the inputs
-String[] continuousCodes = {"spacebar", "t"};
 String[] pressCodes = {"a", "d"};
 
 void setup() {
@@ -27,10 +24,11 @@ void setup() {
   inputs = new InputHandler();
   
   // add some inputs
-  mouseBind = inputs.addContinuous("mouse input", "left mouse");           // if an input only has one key, that key can be passed as a single string.
-  inputs.addContinuous("continuous input", continuousCodes);               // if an input has multiple keys, they are passed in an array (list).
-  press = inputs.addPress("press input", pressCodes);                      // you can either create the array as another variable and pass it into the adder,
-  release = inputs.addRelease("release input", new String[]{"q", "e"});    // or create a new array inside the function call
+  inputs.addInput("continuous input", "spacebar");                        // inputs default to continuous if you don't specify a mode
+  mouseBind = inputs.addInput("mouse input", "left mouse", CONTINUOUS);   // if an input has a single key bound to it, it can be passed as a single string
+  press = inputs.addInput("press input", pressCodes, PRESS_ONLY);         // inputs with multiple keys use an array of strings. you can create the array in another variable,
+  inputs.addInput("release input", new String[]{"q", "e"}, RELEASE_ONLY); // or you can create it in the function call like this
+  release = inputs.getBindRef("release input");
 }
 
 void draw() {
@@ -47,7 +45,7 @@ void draw() {
   fill(inputs.getState("continuous input") ? green : red);
   ellipse(100, 100, 150, 150);
   
-  fill((inputs.getKey("spacebar") || inputs.getKey("t")) ? green : red);
+  fill(inputs.getKeyState("spacebar") ? green : red);
   ellipse(300, 100, 150, 150);
   
   fill(inputs.getState("mouse input") ? green : red);
@@ -85,8 +83,8 @@ void draw() {
   
   // draw labels
   fill(black);
-  text("Continuous:\nSpacebar or T\n(uses getState)", 100, 100);
-  text("Continuous:\nSpacebar or T\n(uses getKey)", 300, 100);
+  text("Continuous:\nSpacebar\n(uses getState)", 100, 100);
+  text("Continuous:\nSpacebar\n(uses getKeyState)", 300, 100);
   text("Continuous:\nLeft Mouse\n(uses getState)", 500, 100);
   text("Continuous:\nLeft Mouse\n(uses reference)", 100, 300);
   text("mouseDelta", 300, 365);
