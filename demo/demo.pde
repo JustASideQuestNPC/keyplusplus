@@ -51,19 +51,19 @@ void draw() {
   fill(inputs.getState("mouse input") ? green : red);
   ellipse(500, 100, 150, 150);
   
-  fill(mouseBind.active() ? green : red);
+  fill(mouseBind.getState() ? green : red);
   ellipse(100, 300, 150, 150);
   
   fill(inputs.getState("press input") ? green : red);
   ellipse(500, 300, 150, 150);
   
-  fill(press.active() ? green : red);
+  fill(press.getState() ? green : red);
   ellipse(100, 500, 150, 150);
   
   fill(inputs.getState("release input") ? green : red);
   ellipse(300, 500, 150, 150);
   
-  fill(release.active() ? green : red);
+  fill(release.getState() ? green : red);
   ellipse(500, 500, 150, 150);
   
   // draw indicator for mouse delta

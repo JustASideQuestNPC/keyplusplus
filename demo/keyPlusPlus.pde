@@ -37,7 +37,7 @@ static final int RELEASE_ONLY = 2;
 // a single input binding
 public class InputBind {
   private int[] boundKeys;    // all keys that can trigger this input
-  private boolean isActive;      // whether the input is active ("pressed")
+  private boolean active;      // whether the input is active ("pressed")
   private int activationMode; // the input's activation mode - CONTINUOUS, PRESS_ONLY, or RELEASE_ONLY
   private boolean wasActive;    // used for press-only and release-only inputs
 
@@ -80,16 +80,16 @@ public class InputBind {
     switch (activationMode) {
       case CONTINUOUS:
         // continuous inputs are active whenever a bound key is pressed
-        isActive = boundKeyPressed;
+        active = boundKeyPressed;
         break;
       case PRESS_ONLY:
         // press-only inputs are active on the first frame that at least one bound key is pressed
         if (boundKeyPressed) {
           if (wasActive) {
-            isActive = false;
+            active = false;
           }
           else {
-            isActive = true;
+            active = true;
             wasActive = true;
           }
         }
@@ -101,10 +101,10 @@ public class InputBind {
         // release-only inputs are active on the first frame that at no bound keys are pressed
         if (!boundKeyPressed) {
           if (wasActive) {
-            isActive = false;
+            active = false;
           }
           else {
-            isActive = true;
+            active = true;
             wasActive = true;
           }
         }
@@ -116,7 +116,7 @@ public class InputBind {
   }
 
   // returns whether the bind is active or not
-  boolean active() { return isActive; }
+  boolean getState() { return active; }
 }
 
 // handles updates for as many input binds as you want - create one of these and then add all your inputs to it
@@ -162,7 +162,7 @@ public class InputHandler {
 
   // gets the state of a binding. names are case-insensitive, and invalid names create undefined behavior (in other words, i have no idea what will happen)
   boolean getState(String name) {
-    return binds.get(name).active();
+    return binds.get(name).getState();
   }
 
   // returns a reference to a binding. names are case-insensitive, and invalid names create undefined behavior
